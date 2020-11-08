@@ -83,10 +83,10 @@
 `This function has no parameters.`
 <?php else : ?>
 <?php foreach ($info->argumentsDescription as $param) : ?>
-* `(<?= $param->type ?>) <?= $param->name ?>`
-<?php if (! empty(trim($param->desc))) : ?>
-: <?= str_replace("\n", "  \n", $param->desc) ?>
+* `(<?= $param->type ?>) <?= $param->name ?>`<?php
+  if (! empty(trim($param->desc))) : ?>: <?= str_replace("\n", "  \n", $param->desc) ?>
 <?php endif ?>
+
 <?php endforeach ?>
 <?php endif ?>
 

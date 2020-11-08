@@ -22,7 +22,7 @@ class ClassParser
     {
         $docblock = $this->docBlockFactory->create($this->reflection->getDocComment() ?: '/** */');
         return (object)[
-            'short' => (string)$docblock->getSummary(),
+            'short' => static::toSingleLine((string)$docblock->getSummary()),
             'long' => (string)$docblock->getDescription(),
         ];
     }
@@ -68,6 +68,10 @@ class ClassParser
         return $constants;
     }
 
+    private static function toSingleLine($string) {
+        return preg_replace('/\s+/', ' ', $string);
+    }
+
     private function getMethodDetails($method)
     {
         $docblock = $this->docBlockFactory->create($method->getDocComment() ?: '/** */');
@@ -84,8 +88,8 @@ class ClassParser
         ];
 
         if ($docblock->getSummary()) {
-            $data['shortDescription'] = $docblock->getSummary();
-            $data['longDescription'] = $docblock->getDescription();
+            $data['shortDescription'] = static::toSingleLine($docblock->getSummary());
+            $data['longDescription'] = static::toSingleLine($docblock->getDescription());
             $data['argumentsList'] = $this->retrieveParams($docblock->getTagsByName('param'));
             $data['argumentsDescription'] = $this->retrieveParamsDescription($docblock->getTagsByName('param'));
             $data['returnValue'] = $this->retrieveTagData($docblock->getTagsByName('return'));
@@ -102,7 +106,7 @@ class ClassParser
         } else {
             $className = sprintf("%s::%s", $method->class, $method->name);
             $atlasdoc = new \Clean\PhpAtlas\ClassMethod($className);
-            $data['shortDescription'] = $atlasdoc->getMethodShortDescription();
+            $data['shortDescription'] = static::toSingleLine($atlasdoc->getMethodShortDescription());
             $data['doclink'] = $atlasdoc->getMethodPHPDocLink();
             $data['type'] = $method->isStatic() ? '::' : '->';
         }
@@ -128,10 +132,10 @@ class ClassParser
         $docblock = $this->docBlockFactory->create($reflection->getDocComment() ?: '/** */');
 
         return (object)[
-            'short' => (string)$docblock->getSummary(),
+            'short' => (string)static::toSingleLine($docblock->getSummary()),
             'long' => (string)$docblock->getDescription(),
             'value' => is_scalar($reflection->getValue())
-                ? $reflection->getValue()
+                ? json_encode($reflection->getValue())
                 : gettype($reflection->getValue()),
         ];
     }
@@ -155,7 +159,7 @@ class ClassParser
         $data = [];
         foreach ($params as $param) {
             $data[] = (object)[
-                'desc' => $param->getDescription(),
+                'desc' => static::toSingleLine($param->getDescription()),
                 'type' => $param->getType(),
             ];
         }
@@ -177,7 +181,7 @@ class ClassParser
         foreach ($params as $param) {
             $data[] = (object)[
                 'name' => '$' . $param->getVariableName(),
-                'desc' => $param->getDescription(),
+                'desc' => static::toSingleLine($param->getDescription()),
                 'type' => $param->getType(),
             ];
         }
