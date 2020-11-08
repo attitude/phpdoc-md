@@ -1,10 +1,10 @@
-# <?= $this->className ?>  
+# <?= $this->className ?>
 
 <?= $this->classDescription->short ?>
 
 <?php if ($this->classDescription->long) : ?>
 
-<?= $this->classDescription->long ?>  
+<?= $this->classDescription->long ?>
 <?php endif ?>
 
 <?php if ($interfaces = $this->interfaces): ?>
@@ -20,13 +20,25 @@
 <?php endif ?>
 
 
+<?php if (!empty($this->constants)): ?>
+## Constants
+
+| Name | Description |
+|------|-------------|
+<?php foreach ($this->constants as $name => $info) : ?>
+|<?= $this->classShortName.'::'.$name ?> = <?= $info->value ?>|<?= $info->short ?>|
+<?php endforeach ?>
+<?php endif ?>
+
+<?php if (!empty($this->methods)): ?>
 ## Methods
 
 | Name | Description |
 |------|-------------|
 <?php foreach ($this->methods as $name => $info) : ?>
-|[<?= $name ?>](#<?= strtolower($this->classShortName.$name) ?>)|<?= $info->shortDescription ?>|
+|[<?= $this->classShortName.$info->type.$name ?>()](#<?= strtolower($this->classShortName.$name) ?>)|<?= $info->shortDescription ?>|
 <?php endforeach ?>
+<?php endif ?>
 
 <?php if ($this->inheritedMethods): ?>
 ## Inherited methods
@@ -35,27 +47,35 @@
 |------|-------------|
 <?php foreach ($this->inheritedMethods as $name => $info) : ?>
 <?php if (isset($info->doclink)): ?>
-| [<?= $name ?>](<?= $info->doclink ?>) | <?= $info->shortDescription ?: '-' ?> |
+| [<?= $this->classShortName.$info->type.$name ?>](<?= $info->doclink ?>) | <?= $info->shortDescription ?: '-' ?> |
 <?php else: ?>
 |<?= $name ?>|<?= $info->shortDescription ?: '-' ?>|
 <?php endif ?>
 <?php endforeach ?>
 <?php endif ?>
 
+---
 
 <?php foreach ($this->methods as $name => $info) : ?>
+---
 
-### <?= $this->classShortName ?>::<?= $name ?>  
+### <?= $this->classShortName . $info->type . $name ?>()
 
 **Description**
 
+<?php $returnValue = $info->returnValue
+  ? implode('|', array_map(function ($param) {
+    return $param->type ? $param->type : null;
+  }, $info->returnValue))
+  : 'void'; ?>
+
 ```php
-<?= $info->visibility ?> <?= $name ?> (<?= join(', ', $info->argumentsList) ?: 'void' ?>)
+<?= $info->visibility ?> <?= $name ?> (<?= join(', ', $info->argumentsList) ?: 'void' ?>): <?= $returnValue."\n" ?>
 ```
 
-<?= $info->shortDescription ?> 
+<?= $info->shortDescription ?>
 
-<?= str_replace("\n", "  \n", $info->longDescription) ?> 
+<?= str_replace("\n", "  \n", $info->longDescription) ?>
 
 **Parameters**
 
@@ -65,10 +85,11 @@
 <?php foreach ($info->argumentsDescription as $param) : ?>
 * `(<?= $param->type ?>) <?= $param->name ?>`
 <?php if (! empty(trim($param->desc))) : ?>
-: <?= str_replace("\n", "  \n", $param->desc) ?>  
+: <?= str_replace("\n", "  \n", $param->desc) ?>
 <?php endif ?>
 <?php endforeach ?>
 <?php endif ?>
+
 
 **Return Values**
 
@@ -98,7 +119,5 @@
 
 <?php endforeach ?>
 <?php endif ?>
-
-<hr />
 
 <?php endforeach ?>

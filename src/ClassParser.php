@@ -52,6 +52,22 @@ class ClassParser
         return $methods;
     }
 
+    public function getConstantsDetails()
+    {
+        $constants = [];
+        $parentClassConstants = $this->getInheritedConstants();
+
+        foreach ($this->reflection->getConstants() as $constant => $value) {
+            if (isset($parentClassConstants[$constant])) {
+                continue;
+            }
+
+            $constants[$constant] = $this->getConstantDetails($constant);
+        }
+
+        return $constants;
+    }
+
     private function getMethodDetails($method)
     {
         $docblock = $this->docBlockFactory->create($method->getDocComment() ?: '/** */');
@@ -64,6 +80,7 @@ class ClassParser
             'returnValue' => null,
             'throwsExceptions' => null,
             'visibility' => null,
+            'type' => null,
         ];
 
         if ($docblock->getSummary()) {
@@ -81,11 +98,13 @@ class ClassParser
                         $method->isStatic() ? ' static' : '',
                     ]
                 );
+            $data['type'] = $method->isStatic() ? '::' : '->';
         } else {
             $className = sprintf("%s::%s", $method->class, $method->name);
             $atlasdoc = new \Clean\PhpAtlas\ClassMethod($className);
             $data['shortDescription'] = $atlasdoc->getMethodShortDescription();
             $data['doclink'] = $atlasdoc->getMethodPHPDocLink();
+            $data['type'] = $method->isStatic() ? '::' : '->';
         }
         return (object)$data;
     }
@@ -101,6 +120,34 @@ class ClassParser
         }
         ksort($methods);
         return $methods;
+    }
+
+    public function getConstantDetails($constant)
+    {
+        $reflection = $this->reflection->getReflectionConstant($constant);
+        $docblock = $this->docBlockFactory->create($reflection->getDocComment() ?: '/** */');
+
+        return (object)[
+            'short' => (string)$docblock->getSummary(),
+            'long' => (string)$docblock->getDescription(),
+            'value' => is_scalar($reflection->getValue())
+                ? $reflection->getValue()
+                : gettype($reflection->getValue()),
+        ];
+    }
+
+    public function getInheritedConstants()
+    {
+        $constants = [];
+        $parentClass = $this->reflection->getParentClass();
+
+        if ($parentClass) {
+            foreach ($parentClass->getConstants() as $constant) {
+                $constants[$constant->getName()] = $this->getMethodDetails($constant);
+            }
+        }
+        ksort($constants);
+        return $constants;
     }
 
     private function retrieveTagData(array $params)

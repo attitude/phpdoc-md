@@ -1,16 +1,20 @@
 <?php
-function normalize($text)
+if (!function_exists('normalize'))
 {
-    return preg_replace('/^_/', '\_', $text);
+    function normalize($text)
+    {
+        return preg_replace('/^_/', '\_', $text);
+    }
 }
+
 ?>
-# <?= $this->className ?>  
+# <?= $this->className ?>
 
 <?= $this->classDescription->short ?>
 
 <?php if ($this->classDescription->long) : ?>
 
-<?= $this->classDescription->long ?>  
+<?= $this->classDescription->long ?>
 <?php endif ?>
 
 <?php if ($interfaces = $this->interfaces): ?>
@@ -25,13 +29,26 @@ function normalize($text)
 <?= $this->parentClass ?>
 <?php endif ?>
 
+<?php if (!empty($this->constants)): ?>
+## Constants
+
+| Name | Description |
+|------|-------------|
+<?php foreach ($this->constants as $name => $info) : ?>
+|[<?= $this->classShortName.'::'.$name ?>](#<?= strtolower($this->classShortName.$name) ?>)|<?= $info->short ?>|
+<?php endforeach ?>
+<?php endif ?>
+
+
+<?php if (!empty($this->methods)): ?>
 ## Methods
 
 | Name | Description |
 | ---- | ----------- |
 <?php foreach ($this->methods as $name => $info) : ?>
-| <a href="#<?= $this->classShortName ?>-<?= $name ?>"><?= normalize($name) ?></a> | <?= normalize($info->shortDescription) ?> |
+| <a href="#<?= $this->classShortName ?>-<?= $name ?>"><?= $this->classShortName.$info->type.normalize($name) ?>()</a> | <?= normalize($info->shortDescription) ?> |
 <?php endforeach ?>
+<?php endif ?>
 
 <?php if ($this->inheritedMethods): ?>
 ## Inherited methods
@@ -40,9 +57,9 @@ function normalize($text)
 |------|-------------|
 <?php foreach ($this->inheritedMethods as $name => $info) : ?>
 <?php if (isset($info->doclink)): ?>
-| [<?= normalize($name) ?>](<?= $info->doclink ?>) | <?= normalize($info->shortDescription) ?: '-' ?> |
+| [<?= normalize($this->classShortName.$info->type.normalize($name)) ?>](<?= $info->doclink ?>) | <?= normalize($info->shortDescription) ?: '-' ?> |
 <?php else: ?>
-| <?= normalize($name) ?> | <?= normalize($info->shortDescription) ?: '-' ?> |
+| <?= normalize($this->classShortName.$info->type.normalize($name)) ?> | <?= normalize($info->shortDescription) ?: '-' ?> |
 <?php endif ?>
 <?php endforeach ?>
 <?php endif ?>
@@ -50,17 +67,23 @@ function normalize($text)
 
 <?php foreach ($this->methods as $name => $info) : ?>
 
-### <?= $this->classShortName ?>::<?= $name ?> <a href="#<?= $this->classShortName ?>-<?= $name ?>" name="<?= $this->classShortName ?>-<?= $name ?>">&#xB6;</a>
+### <?= $this->classShortName . $info->type . $name ?>() <a href="#<?= $this->classShortName ?>-<?= $name ?>" name="<?= $this->classShortName ?>-<?= $name ?>">&#xB6;</a>
 
 **Description**
 
+<?php $returnValue = $info->returnValue
+  ? implode('|', array_map(function ($param) {
+    return $param->type ? $param->type : null;
+  }, $info->returnValue))
+  : 'void'; ?>
+
 ```php
-<?= $info->visibility ?> <?= $name ?> (<?= join(', ', $info->argumentsList) ?: 'void' ?>)
+<?= $info->visibility ?> <?= $name ?> (<?= join(', ', $info->argumentsList) ?: 'void' ?>): <?= $returnValue."\n" ?>
 ```
 
-<?= $info->shortDescription ?> 
+<?= $info->shortDescription ?>
 
-<?= str_replace("\n", "  \n", $info->longDescription) ?> 
+<?= str_replace("\n", "  \n", $info->longDescription) ?>
 
 **Parameters**
 
@@ -70,21 +93,25 @@ function normalize($text)
 <?php foreach ($info->argumentsDescription as $param) : ?>
 * `(<?= $param->type ?>) <?= $param->name ?>`
 <?php if (! empty(trim($param->desc))) : ?>
-: <?= str_replace("\n", "  \n", $param->desc) ?>  
+: <?= str_replace("\n", "  \n", $param->desc) ?>
 <?php endif ?>
 <?php endforeach ?>
 <?php endif ?>
 
 **Return Values**
 
+<?php if (!$info->returnValue) : ?>
+`void`
+<?php else : ?>
 <?php foreach ($info->returnValue as $param) : ?>
 `<?= $param->type ?>`
 
 <?php if (! empty(trim($param->desc))) : ?>
-> <?= str_replace("\n", "  \n", $param->desc) ?>  
+> <?= str_replace("\n", "  \n", $param->desc) ?>
 <?php endif ?>
 
 <?php endforeach ?>
+<?php endif ?>
 
 <?php if ($info->throwsExceptions) : ?>
 
@@ -100,6 +127,6 @@ function normalize($text)
 <?php endforeach ?>
 <?php endif ?>
 
-<hr />
+---
 
 <?php endforeach ?>

@@ -9,9 +9,9 @@ abstract class ClassInfo extends Phtml
     protected $reflectionClass;
 
     /**
-     * __construct 
-     * 
-     * @param ReflectionClass $class class 
+     * __construct
+     *
+     * @param ReflectionClass $class class
      */
     public function __construct(ReflectionClass $class)
     {
@@ -23,7 +23,7 @@ abstract class ClassInfo extends Phtml
 
     /**
      * Renders markdown for class
-     * 
+     *
      * @return string
      */
     public function render()
@@ -36,6 +36,7 @@ abstract class ClassInfo extends Phtml
             [
                 'className' => $this->reflectionClass->getName(),
                 'classShortName' => $this->reflectionClass->getShortName(),
+                'constants' => $parser->getConstantsDetails(),
                 'methods' => $methods,
                 'classDescription' => $parser->getClassDescription(),
                 'interfaces' => $parser->getInterfaces(),
