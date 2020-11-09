@@ -36,7 +36,7 @@
 | Name | Description |
 |------|-------------|
 <?php foreach ($this->methods as $name => $info) : ?>
-|[<?= $this->classShortName.$info->type.$name ?>()](#<?= strtolower($this->classShortName.$name) ?>)|<?= $info->shortDescription ?>|
+|[<?= $this->classShortName.$info->type.$name ?>()](#<?= strtolower($this->classShortName.($info->type === '->' ? '-' : '').$name) ?>)|<?= $info->shortDescription ?>|
 <?php endforeach ?>
 <?php endif ?>
 
@@ -75,7 +75,9 @@
 
 <?= $info->shortDescription ?>
 
-<?= str_replace("\n", "  \n", $info->longDescription) ?>
+<?php if ($info->longDescription): ?>
+<?= "\n".str_replace("\n", "  \n", $info->longDescription)."\n" ?>
+<?php endif ?>
 
 **Parameters**
 
