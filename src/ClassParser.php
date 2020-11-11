@@ -89,7 +89,7 @@ class ClassParser
 
         if ($docblock->getSummary()) {
             $data['shortDescription'] = static::toSingleLine($docblock->getSummary());
-            $data['longDescription'] = static::toSingleLine($docblock->getDescription());
+            $data['longDescription'] = $docblock->getDescription();
             $data['argumentsList'] = $this->retrieveParams($docblock->getTagsByName('param'));
             $data['argumentsDescription'] = $this->retrieveParamsDescription($docblock->getTagsByName('param'));
             $data['returnValue'] = $this->retrieveTagData($docblock->getTagsByName('return'));
